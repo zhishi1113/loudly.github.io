@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五年级英语·大声读 10 格大挑战</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    user-select: none;
+    color: #333;
+  }
+  
+  /* 顶部控制栏 */
+  .top-bar {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 24px;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    max-width: 1100px;
+    width: 100%;
+  }
+  .btn {
+    padding: 8px 18px;
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-mic { background: #ff4757; color: white; }
+  .btn-next { background: #2ed573; color: white; }
+
+  /* 门槛滑块控制 */
+  .slider-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #edf2f7;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .slider-box input { cursor: pointer; }
+
+  /* 主舞台卡片 */
+  .stage-card {
+    background: #fff;
+    width: 100%;
+    max-width: 1100px;
+    height: 570px;
+    border-radius: 24px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 超大显眼单词展示区 */
+  .word-billboard {
+    background: #f8fafc;
+    border-bottom: 4px solid #e2e8f0;
+    padding: 15px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .progress-tag {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    font-weight: 900;
+    color: #475569;
+    background: #e2e8f0;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+  .word-main {
+    font-size: 72px; /* 超大字体 */
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: 2px;
+    line-height: 1.1;
+    text-shadow: 1px 1px 0 #cbd5e1;
+  }
+  .word-sub {
+    font-size: 24px;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 6px;
+  }
+
+  /* 游戏渲染大舞台 */
+  .arena {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .scene {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    display: none;
+  }
+  .scene.active { display: block; }
+
+  /* 1. 拔超级萝卜 */
+  .scene-carrot {
+    background: linear-gradient(180deg, #68b0ab 0%, #c8d5b9 60%, #8d6e63 60%, #5d4037 100%);
+  }
+  .carrot-pit {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    height: 280px;
+  }
+  .giant-carrot {
+    position: absolute;
+    bottom: 0px;
+    left: 50px;
+    font-size: 140px;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 15px 6px rgba(0,0,0,0.4));
+  }
+  .mud {
+    position: absolute;
+    bottom: -15px;
+    width: 100%;
+    height: 35px;
+    background: #4e342e;
+    border-radius: 50%;
+  }
+
+  /* 2. 火箭升空 */
+  .scene-rocket {
+    background: linear-gradient(180deg, #05051a 0%, #1e1e4a 60%, #2f3542 100%);
+  }
+  .rocket {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 110px;
+    transition: bottom 0.35s ease;
+  }
+  .space-stars {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-size: 26px;
+    top: 20px;
+    color: #fffa65;
+  }
+
+  /* 3. 巨拳猛击大怪兽 (纯拳头与怪兽) */
+  .scene-monster {
+    background: linear-gradient(180deg, #ff7675 0%, #fab1a0 100%);
+  }
+  .giant-fist {
+    position: absolute;
+    left: 10%;
+    top: 35%;
+    font-size: 110px;
+    transition: left 0.25s ease, transform 0.15s;
+  }
+  .monster-target {
+    position: absolute;
+    right: 15%;
+    top: 25%;
+    font-size: 140px;
+    transition: transform 0.2s;
+  }
+
+  /* 4. 大铁锤砸金蛋/地鼠 */
+  .scene-hammer {
+    background: linear-gradient(180deg, #70a1ff 0%, #a4b0be 70%, #57606f 100%);
+  }
+  .egg-stand {
+    position: absolute;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  .egg-target {
+    font-size: 120px;
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  .big-hammer {
+    position: absolute;
+    left: 36%;
+    bottom: 150px;
+    font-size: 110px;
+    transform-origin: bottom right;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* 5. 火山大爆发 */
+  .scene-volcano {
+    background: linear-gradient(180deg, #2f3542 0%, #ff6b6b 70%, #ee5253 100%);
+  }
+  .volcano-mountain {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 200px solid transparent;
+    border-right: 200px solid transparent;
+    border-bottom: 240px solid #2d3436;
+  }
+  .lava-flow {
+    position: absolute;
+    bottom: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 90px;
+    transition: bottom 0.35s ease, transform 0.2s;
+  }
+
+  /* 10格指示器 */
+  .step-grid-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px;
+    background: #edf2f7;
+    border-top: 2px solid #cbd5e1;
+  }
+  .step-cell {
+    width: 32px;
+    height: 18px;
+    border-radius: 4px;
+    background: #cbd5e1;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .step-cell.active {
+    background: #2ed573;
+    transform: scaleY(1.3);
+  }
+
+  /* 麦克风能量条 */
+  .meter-box {
+    background: #fff;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-top: 2px solid #e2e8f0;
+  }
+  .meter-label { font-size: 16px; font-weight: 800; color: #1e293b; min-width: 90px; }
+  .meter-track {
+    flex: 1;
+    height: 26px;
+    background: #e2e8f0;
+    border-radius: 13px;
+    position: relative;
+    overflow: hidden;
+  }
+  .meter-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f1c40f, #ff4757);
+    border-radius: 13px;
+    transition: width 0.05s linear;
+  }
+  .gate-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: #ff4757;
+    z-index: 2;
+  }
+
+  /* 通关弹层 */
+  .overlay-win {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    color: white;
+  }
+  .overlay-title { font-size: 54px; font-weight: 900; color: #f1c40f; }
+  .overlay-desc { font-size: 24px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- 控制栏 -->
+<div class="top-bar">
+  <button id="micBtn" class="btn btn-mic">🎙️ 开启麦克风</button>
+
+  <div>
+    <select id="gameSelect" style="padding: 7px; border-radius: 8px; font-weight: bold; font-size: 15px;">
+      <option value="carrot">🥕 1. 拔超级大萝卜</option>
+      <option value="rocket">🚀 2. 火箭升天冲关</option>
+      <option value="monster">🥊 3. 巨拳猛揍大怪兽</option>
+      <option value="hammer">🔨 4. 疯狂砸碎大彩蛋</option>
+      <option value="volcano">🌋 5. 火山地热大爆发</option>
+    </select>
+  </div>
+
+  <div>
+    <select id="modeSelect" style="padding: 7px; border-radius: 8px; font-size: 15px;">
+      <option value="en-zh">展示英文 (全班大声读)</option>
+      <option value="zh-en">展示中文 (脱口说英文)</option>
+    </select>
+  </div>
+
+  <!-- 灵敏度门槛滑块 -->
+  <div class="slider-box">
+    <span>音量门槛:</span>
+    <input type="range" id="thresholdSlider" min="20" max="85" value="45">
+    <span id="thresholdVal">45%</span>
+  </div>
+
+  <button id="nextBtn" class="btn btn-next">换个单词 ⏭️</button>
+</div>
+
+<!-- 舞台卡片 -->
+<div class="stage-card">
+  <!-- 超大单词展示区 -->
+  <div class="word-billboard">
+    <div class="progress-tag">关卡: <strong id="stepNum" style="color:#2ed573;">0</strong> / 10</div>
+    <div id="wordMain" class="word-main">点击开启麦克风</div>
+    <div id="wordSub" class="word-sub">准备开始挑战</div>
+  </div>
+
+  <!-- 5大游戏动画区 -->
+  <div class="arena">
+    <!-- 1. 拔大萝卜 -->
+    <div id="sceneCarrot" class="scene scene-carrot active">
+      <div class="carrot-pit">
+        <div id="giantCarrot" class="giant-carrot">🥕</div>
+        <div class="mud"></div>
+      </div>
+    </div>
+
+    <!-- 2. 火箭升天 -->
+    <div id="sceneRocket" class="scene scene-rocket">
+      <div class="space-stars">✨ 🪐 🌕 🌟 🛸 ✨</div>
+      <div id="rocket" class="rocket">🚀</div>
+    </div>
+
+    <!-- 3. 拳头打怪兽 (无超人，只有拳头猛击怪兽) -->
+    <div id="sceneMonster" class="scene scene-monster">
+      <div id="giantFist" class="giant-fist">👊</div>
+      <div id="monsterTarget" class="monster-target">👾</div>
+    </div>
+
+    <!-- 4. 疯狂砸彩蛋 -->
+    <div id="sceneHammer" class="scene scene-hammer">
+      <div id="bigHammer" class="big-hammer">🔨</div>
+      <div class="egg-stand">
+        <div id="eggTarget" class="egg-target">🥚</div>
+      </div>
+    </div>
+
+    <!-- 5. 火山大爆发 -->
+    <div id="sceneVolcano" class="scene scene-volcano">
+      <div id="lavaFlow" class="lava-flow">💨</div>
+      <div class="volcano-mountain"></div>
+    </div>
+
+    <!-- 胜利弹窗 -->
+    <div id="winOverlay" class="overlay-win">
+      <div class="overlay-title">🏆 挑战通关成功！ 🏆</div>
+      <div class="overlay-desc">全班声音太洪亮啦！10 格大关卡已征服！</div>
+    </div>
+  </div>
+
+  <!-- 10格指示器 -->
+  <div class="step-grid-wrap" id="stepGrid"></div>
+
+  <!-- 声浪能量条 -->
+  <div class="meter-box">
+    <div class="meter-label">全班声浪:</div>
+    <div class="meter-track">
+      <div id="gateMarker" class="gate-line" style="left: 45%;"></div>
+      <div id="meterBar" class="meter-bar"></div>
+    </div>
+    <div id="meterPercent" style="font-weight: 800; min-width: 45px; color:#ff4757;">0%</div>
+  </div>
+</div>
+
+<script>
+// 1~5单元完全混合词库 (56个词汇)
+const wordPool = [
+  { en:"new", zh:"新的" }, { en:"year", zh:"年" }, { en:"long", zh:"长的" },
+  { en:"round", zh:"圆的" }, { en:"think", zh:"想，思考" }, { en:"short", zh:"短的，矮的" },
+  { en:"nice", zh:"好看的" }, { en:"kind", zh:"友善的" }, { en:"old", zh:"老的，旧的" },
+  { en:"young", zh:"年轻的" }, { en:"uncle", zh:"叔叔" }, { en:"his", zh:"他的" },
+  { en:"him", zh:"他 (宾格)" }, { en:"tea", zh:"茶" }, { en:"juice", zh:"果汁" },
+  { en:"coffee", zh:"咖啡" }, { en:"ice", zh:"冰" }, { en:"ice cream", zh:"冰淇淋" },
+  { en:"glass", zh:"玻璃杯" }, { en:"glasses", zh:"眼镜" }, { en:"would like", zh:"想要" },
+  { en:"sandwich", zh:"三明治" }, { en:"beef", zh:"牛肉" }, { en:"how much", zh:"多少钱" },
+  { en:"pork", zh:"猪肉" }, { en:"email", zh:"电子邮件" }, { en:"buy", zh:"买" },
+  { en:"lot", zh:"许多" }, { en:"sure", zh:"当然" }, { en:"robot", zh:"机器人" },
+  { en:"search", zh:"搜索" }, { en:"information", zh:"信息" }, { en:"world", zh:"世界" },
+  { en:"send", zh:"发送" }, { en:"greeting", zh:"问候" }, { en:"lesson", zh:"课" },
+  { en:"eraser", zh:"橡皮" }, { en:"dictionary", zh:"词典" }, { en:"borrow", zh:"借" },
+  { en:"glue", zh:"胶水" }, { en:"notebook", zh:"笔记本" }, { en:"blackboard", zh:"黑板" },
+  { en:"work", zh:"工作" }, { en:"worry", zh:"担心" }, { en:"ask", zh:"问" },
+  { en:"may", zh:"可以" }, { en:"pet", zh:"宠物" }, { en:"Mrs", zh:"夫人" },
+  { en:"rabbit", zh:"兔子" }, { en:"lovely", zh:"可爱的" }, { en:"hold", zh:"抱，拿" },
+  { en:"goldfish", zh:"金鱼" }, { en:"feed", zh:"喂养" }, { en:"clever", zh:"聪明的" },
+  { en:"shop", zh:"商店" }, { en:"parrot", zh:"鹦鹉" }, { en:"back", zh:"回来" }
+];
+
+const TOTAL_STEPS = 10;
+let currentStep = 0;
+let currentWord = null;
+let currentGame = 'carrot';
+let threshold = 45;
+let isCooldown = false;
+let quietTimer = 0;
+
+// 音频变量
+let audioCtx = null;
+let analyser = null;
+let isMicActive = false;
+
+// DOM 获取
+const micBtn = document.getElementById('micBtn');
+const gameSelect = document.getElementById('gameSelect');
+const modeSelect = document.getElementById('modeSelect');
+const thresholdSlider = document.getElementById('thresholdSlider');
+const thresholdVal = document.getElementById('thresholdVal');
+const gateMarker = document.getElementById('gateMarker');
+const meterBar = document.getElementById('meterBar');
+const meterPercent = document.getElementById('meterPercent');
+const wordMain = document.getElementById('wordMain');
+const wordSub = document.getElementById('wordSub');
+const stepNum = document.getElementById('stepNum');
+const stepGrid = document.getElementById('stepGrid');
+const winOverlay = document.getElementById('winOverlay');
+const nextBtn = document.getElementById('nextBtn');
+
+// 场景元素
+const giantCarrot = document.getElementById('giantCarrot');
+const rocket = document.getElementById('rocket');
+const giantFist = document.getElementById('giantFist');
+const monsterTarget = document.getElementById('monsterTarget');
+const bigHammer = document.getElementById('bigHammer');
+const eggTarget = document.getElementById('eggTarget');
+const lavaFlow = document.getElementById('lavaFlow');
+
+// 生成10格指示器
+for (let i = 0; i < TOTAL_STEPS; i++) {
+  const cell = document.createElement('div');
+  cell.className = 'step-cell';
+  cell.id = `step-${i}`;
+  stepGrid.appendChild(cell);
+}
+
+// 门槛调节
+thresholdSlider.addEventListener('input', (e) => {
+  threshold = parseInt(e.target.value);
+  thresholdVal.textContent = threshold + '%';
+  gateMarker.style.left = threshold + '%';
+});
+
+// 游戏切换
+gameSelect.addEventListener('change', (e) => {
+  currentGame = e.target.value;
+  document.querySelectorAll('.scene').forEach(sc => sc.classList.remove('active'));
+  if (currentGame === 'carrot') document.getElementById('sceneCarrot').classList.add('active');
+  if (currentGame === 'rocket') document.getElementById('sceneRocket').classList.add('active');
+  if (currentGame === 'monster') document.getElementById('sceneMonster').classList.add('active');
+  if (currentGame === 'hammer') document.getElementById('sceneHammer').classList.add('active');
+  if (currentGame === 'volcano') document.getElementById('sceneVolcano').classList.add('active');
+  resetProgress();
+});
+
+modeSelect.addEventListener('change', renderCurrentWord);
+nextBtn.addEventListener('click', pickRandomWord);
+
+// 彻底随机抽词 (全题库大洗牌)
+function pickRandomWord() {
+  currentWord = wordPool[Math.floor(Math.random() * wordPool.length)];
+  renderCurrentWord();
+}
+
+function renderCurrentWord() {
+  if (!currentWord) return;
+  if (modeSelect.value === 'en-zh') {
+    wordMain.textContent = currentWord.en;
+    wordSub.textContent = currentWord.zh;
+  } else {
+    wordMain.textContent = currentWord.zh;
+    wordSub.textContent = "全班大声说出对应的英文！";
+  }
+}
+
+// 开启麦克风
+micBtn.addEventListener('click', async () => {
+  if (isMicActive) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    const src = audioCtx.createMediaStreamSource(stream);
+    src.connect(analyser);
+    analyser.fftSize = 256;
+
+    isMicActive = true;
+    micBtn.textContent = '🟢 课堂收音中';
+    micBtn.style.background = '#2ed573';
+    pickRandomWord();
+    renderStep();
+    listenLoop();
+  } catch(err) {
+    alert("麦克风启动失败，请检查浏览器是否已允许麦克风权限！\n" + err);
+  }
+});
+
+function listenLoop() {
+  requestAnimationFrame(listenLoop);
+  if (!isMicActive) return;
+
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) sum += data[i];
+  let avg = sum / data.length;
+
+  let vol = Math.max(0, (avg - 10) * 1.5);
+  vol = Math.min(100, Math.round(vol));
+
+  meterBar.style.width = vol + '%';
+  meterPercent.textContent = vol + '%';
+
+  // 1. 达到门槛大声朗读成功
+  if (vol >= threshold) {
+    if (!isCooldown) {
+      isCooldown = true;
+      quietTimer = 0;
+      stepForward();
+      // 读完一次冷却 1.2 秒防连跳，并自动换词
+      setTimeout(() => {
+        isCooldown = false;
+        pickRandomWord();
+      }, 1200);
+    }
+  } else {
+    // 2. 约 6 秒太小声/发呆惩罚倒退一格
+    quietTimer++;
+    if (quietTimer > 350) {
+      stepBackward();
+      quietTimer = 0;
+    }
+  }
+}
+
+// 前进一格
+function stepForward() {
+  if (currentStep < TOTAL_STEPS) {
+    currentStep++;
+    playBeep(520, 880);
+    renderStep();
+    if (currentStep >= TOTAL_STEPS) {
+      triggerWin();
+    }
+  }
+}
+
+// 后退一格
+function stepBackward() {
+  if (currentStep > 0 && currentStep < TOTAL_STEPS) {
+    currentStep--;
+    playBeep(320, 200);
+    renderStep();
+  }
+}
+
+function resetProgress() {
+  currentStep = 0;
+  winOverlay.style.display = 'none';
+  renderStep();
+}
+
+// 渲染各个游戏的动效
+function renderStep() {
+  stepNum.textContent = currentStep;
+
+  // 更新小方块指示器
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const el = document.getElementById(`step-${i}`);
+    if (i < currentStep) el.classList.add('active');
+    else el.classList.remove('active');
+  }
+
+  const ratio = currentStep / TOTAL_STEPS;
+
+  // 1. 拔萝卜
+  const carrotY = ratio * 160;
+  giantCarrot.style.transform = `translateY(-${carrotY}px) rotate(${currentStep % 2 === 0 ? 6 : -6}deg)`;
+
+  // 2. 火箭升天
+  rocket.style.bottom = (25 + ratio * 340) + 'px';
+
+  // 3. 巨拳揍怪兽 (拳头逐步逼近狂揍，怪兽不断挨打缩小震颤)
+  giantFist.style.left = (10 + ratio * 50) + '%';
+  giantFist.style.transform = `rotate(${currentStep * 10}deg) scale(${1 + ratio * 0.3})`;
+  monsterTarget.style.transform = `scale(${1 - ratio * 0.6}) rotate(${currentStep % 2 === 0 ? 15 : -15}deg)`;
+
+  // 4. 疯狂砸彩蛋 (锤子蓄力高举并砸下，蛋出现裂纹并破壳)
+  bigHammer.style.transform = `rotate(${ratio * -70}deg)`;
+  if (currentStep === 0) eggTarget.textContent = '🥚';
+  else if (currentStep < 5) eggTarget.textContent = '🍳';
+  else if (currentStep < 10) eggTarget.textContent = '🐣';
+  else eggTarget.textContent = '💥';
+
+  // 5. 火山喷发 (地热能量一步一步向上涌出，最后大爆发)
+  lavaFlow.style.bottom = (200 + ratio * 160) + 'px';
+  lavaFlow.style.transform = `translateX(-50%) scale(${1 + ratio * 1.5})`;
+  if (currentStep < 4) lavaFlow.textContent = '💨';
+  else if (currentStep < 8) lavaFlow.textContent = '🔥';
+  else lavaFlow.textContent = '🌋';
+}
+
+function triggerWin() {
+  winOverlay.style.display = 'flex';
+  playBeep(440, 1100);
+  setTimeout(() => {
+    resetProgress();
+    pickRandomWord();
+  }, 3500);
+}
+
+function playBeep(f1, f2) {
+  try {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(f1, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(f2, audioCtx.currentTime + 0.25);
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  } catch(e) {}
+}
+</script>
+</body>
+</html>
